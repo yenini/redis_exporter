@@ -920,12 +920,14 @@ func (e *Exporter) scrape(scrapes chan<- scrapeResult) {
 
 	errorCount := 0
 	for idx, addr := range e.redis.Addrs {
-		var up float64 = 1
-		if err := e.scrapeRedisHost(scrapes, addr, idx); err != nil {
+		go func() {
+		  var up float64 = 1
+		  if err := e.scrapeRedisHost(scrapes, addr, idx); err != nil {
 			errorCount++
 			up = 0
-		}
-		scrapes <- scrapeResult{Name: "up", Addr: addr, Alias: e.redis.Aliases[idx], Value: up}
+		  }
+		  scrapes <- scrapeResult{Name: "up", Addr: addr, Alias: e.redis.Aliases[idx], Value: up}
+		}()
 	}
 
 	e.scrapeErrors.Set(float64(errorCount))
